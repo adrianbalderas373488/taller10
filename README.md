@@ -10,3 +10,5 @@ y administrar tareas con la API de DummyJSON.
 - `filter`: en `getVisibleTodos`, deja solo las tareas que cumplen el filtro y la búsqueda. También en `handleTodoDelete`, para quitar la tarea eliminada.
 - `sort`: en `getVisibleTodos`, pone primero las tareas pendientes.
 - `find`: en `handleTodoToggle` y `handleTodoDelete`, localiza la tarea por su id.
+
+Página publicada: https://adrianbalderas373488.github.io/taller10/
