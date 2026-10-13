@@ -28,6 +28,10 @@ const todosMessage = document.querySelector('#todos-message');
 
 const filterSelect = document.querySelector('#filter');
 const searchInput = document.querySelector('#search');
+//para agregar tareas
+const addForm = document.querySelector('#add-form');
+const newTodoInput = document.querySelector('#new-todo');
+const addButton = document.querySelector('#add-button');
 
 function showLoginError(message) {
     loginError.textContent = message;
@@ -140,6 +144,12 @@ async function handleTodoToggle(checkbox) {
         return;
     }
 
+    if (todo.isLocal) {
+        todo.completed = checkbox.checked;
+        render();
+        return;
+    }
+
     checkbox.disabled = true;
 
     try {
@@ -156,6 +166,17 @@ async function handleTodoToggle(checkbox) {
 
 async function handleTodoDelete(button) {
     const id = Number(button.closest('li').dataset.id);
+    const todo = todos.find((item) => item.id === id);
+
+    if (!todo) {
+        return;
+    }
+
+    if (todo.isLocal) {
+        todos = todos.filter((item) => item.id !== id);
+        render();
+        return;
+    }
 
     button.disabled = true;
 
@@ -182,6 +203,56 @@ function handleTodoListClick(event) {
 
     if (deleteButton) {
         handleTodoDelete(deleteButton);
+    }
+}
+
+async function createTodoOnServer(text) {
+    const response = await fetch(`${API_URL}/todos/add`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            todo: text,
+            completed: false,
+            userId: currentUser.id
+        })
+    });
+
+    if (!response.ok) {
+        throw new Error(`No se pudo agregar la tarea (código ${response.status})`);
+    }
+
+    return response.json();
+}
+
+async function handleAddSubmit(event) {
+    event.preventDefault();
+    const text = newTodoInput.value.trim();
+
+    if (text === '') {
+        showTodosMessage('Escribe el texto de la tarea.');
+        return;
+    }
+
+    addButton.disabled = true;
+
+    try {
+        const createdTodo = await createTodoOnServer(text);
+
+        const newTodo = {
+        id: Date.now(),
+        todo: createdTodo.todo,
+        completed: createdTodo.completed,
+        userId: createdTodo.userId,
+        isLocal: true
+        };
+
+        todos = [...todos, newTodo];
+        addForm.reset();
+        render();
+    } catch (error) {
+        showTodosMessage(getErrorMessage(error));
+    } finally {
+        addButton.disabled = false;
     }
 }
 
@@ -364,5 +435,5 @@ filterSelect.addEventListener('change', renderTodos);
 searchInput.addEventListener('input', renderTodos);
 todoList.addEventListener('change', handleTodoListChange);
 todoList.addEventListener('click', handleTodoListClick);
-
+addForm.addEventListener('submit', handleAddSubmit);
 enterPanel();
