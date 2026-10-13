@@ -1,6 +1,5 @@
 const API_URL = 'https://dummyjson.com';
 const TOKEN_KEY = 'accessToken';
-
 const loginForm = document.querySelector('#login-form');
 const usernameInput = document.querySelector('#username');
 const passwordInput = document.querySelector('#password');
@@ -107,6 +106,85 @@ function logout() {
     showLogin();
 }
 
+async function updateTodoOnServer(id, completed) {
+    const response = await fetch(`${API_URL}/todos/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ completed })
+    });
+
+    if (!response.ok) {
+        throw new Error(`No se pudo actualizar la tarea (código ${response.status})`);
+    }
+
+    return response.json();
+}
+
+async function deleteTodoOnServer(id) {
+    const response = await fetch(`${API_URL}/todos/${id}`, {
+        method: 'DELETE'
+    });
+
+    if (!response.ok) {
+        throw new Error(`No se pudo eliminar la tarea (código ${response.status})`);
+    }
+
+    return response.json();
+}
+
+async function handleTodoToggle(checkbox) {
+    const id = Number(checkbox.closest('li').dataset.id);
+    const todo = todos.find((item) => item.id === id);
+
+    if (!todo) {
+        return;
+    }
+
+    checkbox.disabled = true;
+
+    try {
+        const updatedTodo = await updateTodoOnServer(id, checkbox.checked);
+        todo.completed = updatedTodo.completed;
+        render();
+    } catch (error) {
+        checkbox.checked = todo.completed;
+        showTodosMessage(getErrorMessage(error));
+    } finally {
+        checkbox.disabled = false;
+    }
+}
+
+async function handleTodoDelete(button) {
+    const id = Number(button.closest('li').dataset.id);
+
+    button.disabled = true;
+
+    try {
+        await deleteTodoOnServer(id);
+        todos = todos.filter((item) => item.id !== id);
+        render();
+    } catch (error) {
+        showTodosMessage(getErrorMessage(error));
+        button.disabled = false;
+    }
+}
+
+function handleTodoListChange(event) {
+    const checkbox = event.target.closest('input[type="checkbox"]');
+
+    if (checkbox) {
+        handleTodoToggle(checkbox);
+    }
+}
+
+function handleTodoListClick(event) {
+    const deleteButton = event.target.closest('button[data-action="delete"]');
+
+    if (deleteButton) {
+        handleTodoDelete(deleteButton);
+    }
+}
+
 async function enterPanel() {
     const token = localStorage.getItem(TOKEN_KEY);
 
@@ -162,6 +240,12 @@ async function handleLoginSubmit(event) {
 function showTodosMessage(message) {
     todosMessage.textContent = message;
     todosMessage.hidden = false;
+}
+
+function getErrorMessage(error) {
+  return error instanceof TypeError
+    ? 'No se pudo conectar con el servidor'
+    : error.message;
 }
 
 async function fetchTodos(userId) {
@@ -278,5 +362,7 @@ loginForm.addEventListener('submit', handleLoginSubmit);
 logoutButton.addEventListener('click', logout);
 filterSelect.addEventListener('change', renderTodos);
 searchInput.addEventListener('input', renderTodos);
+todoList.addEventListener('change', handleTodoListChange);
+todoList.addEventListener('click', handleTodoListClick);
 
 enterPanel();
