@@ -18,6 +18,15 @@ const profileEmail = document.querySelector('#profile-email');
 const profilePhone = document.querySelector('#profile-phone');
 const profileAge = document.querySelector('#profile-age');
 
+//listas de tareas
+let todos = [];
+const statTotal = document.querySelector('#stat-total');
+const statCompleted = document.querySelector('#stat-completed');
+const statPending = document.querySelector('#stat-pending');
+const statPercent = document.querySelector('#stat-percent');
+const todoList = document.querySelector('#todo-list');
+const todosMessage = document.querySelector('#todos-message');
+
 function showLoginError(message) {
     loginError.textContent = message;
     loginError.hidden = false;
@@ -88,6 +97,7 @@ function renderProfile(user) {
 function logout() {
     localStorage.removeItem(TOKEN_KEY);
     currentUser = null;
+    todos = [];
     loginForm.reset();
     showLogin();
 }
@@ -112,6 +122,7 @@ async function enterPanel() {
         currentUser = user;
         renderProfile(user);
         showPanel();
+        await loadTodos();
     } catch (error) {
         const message = error instanceof TypeError
         ? 'No se pudo conectar con el servidor'
@@ -142,6 +153,100 @@ async function handleLoginSubmit(event) {
         loginButton.textContent = 'Entrar';
     }
 }
+//mensajes para la seccion de tareas
+function showTodosMessage(message) {
+    todosMessage.textContent = message;
+    todosMessage.hidden = false;
+}
+
+async function fetchTodos(userId) {
+    const response = await fetch(`${API_URL}/todos/user/${userId}`);
+
+    if (!response.ok) {
+        throw new Error(`Error del servidor (código ${response.status})`);
+    }
+
+    const data = await response.json();
+    return data.todos;
+}
+
+function createTodoItem(todo) {
+    const item = document.createElement('li');
+    item.dataset.id = todo.id;
+
+    if (todo.completed) {
+        item.classList.add('completed');
+    }
+
+    const label = document.createElement('label');
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = todo.completed;
+
+    const text = document.createElement('span');
+    text.textContent = todo.todo;
+
+    label.append(checkbox, text);
+
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.dataset.action = 'delete';
+    deleteButton.textContent = 'Eliminar';
+
+    item.append(label, deleteButton);
+    return item;
+}
+
+function renderTodos() {
+    const items = todos.map(createTodoItem);
+    todoList.replaceChildren(...items);
+
+    if (todos.length === 0) {
+        showTodosMessage('No hay tareas para mostrar.');
+    } else {
+        todosMessage.hidden = true;
+    }
+}
+
+function renderStats() {
+    const total = todos.length;
+    const completed = todos.reduce(
+        (count, todo) => (todo.completed ? count + 1 : count),
+        0
+    );
+    const pending = total - completed;
+    const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+    statTotal.textContent = total;
+    statCompleted.textContent = completed;
+    statPending.textContent = pending;
+    statPercent.textContent = percent;
+}
+
+function render() {
+    renderStats();
+    renderTodos();
+}
+
+//Carga
+async function loadTodos() {
+    todos = [];
+    renderStats();
+    todoList.replaceChildren();
+    showTodosMessage('Cargando tareas...');
+
+    try {
+        todos = await fetchTodos(currentUser.id);
+        render();
+    } catch (error) {
+        const message = error instanceof TypeError
+        ? 'No se pudo conectar con el servidor'
+        : error.message;
+        showTodosMessage(message);
+    }
+}
+
 
 loginForm.addEventListener('submit', handleLoginSubmit);
 logoutButton.addEventListener('click', logout);
