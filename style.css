@@ -1,0 +1,144 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: system-ui, sans-serif;
+    line-height: 1.5;
+    color: #222222;
+}
+
+header,
+main {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+section {
+    margin-bottom: 2rem;
+}
+
+/* --- Formularios y botones --- */
+input[type="text"],
+input[type="password"],
+input[type="search"],
+select {
+    width: 100%;
+    padding: 0.6rem;
+    font: inherit;
+    border: 1px solid #cccccc;
+    border-radius: 0.4rem;
+}
+
+button {
+    padding: 0.6rem 1rem;
+    font: inherit;
+    color: white;
+    background: #2563eb;
+    border: 0;
+    border-radius: 0.4rem;
+    cursor: pointer;
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+label {
+    display: block;
+    margin-top: 1rem;
+    font-weight: bold;
+}
+
+#login-form button,
+#add-form button {
+    margin-top: 0.75rem;
+}
+
+#login-error {
+    color: #b00020;
+}
+
+/* --- Perfil --- */
+#profile-photo {
+    border-radius: 50%;
+}
+
+#profile-name {
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+dt {
+    font-weight: bold;
+}
+
+dd {
+    margin: 0 0 0.5rem 0;
+}
+
+/* --- Tareas --- */
+#stats {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding: 0;
+    list-style: none;
+}
+
+#stats li {
+    width: 48%;
+    margin-bottom: 0.5rem;
+    padding: 0.75rem;
+    text-align: center;
+    background: #f2f4f7;
+    border-radius: 0.4rem;
+}
+
+#todos-message {
+    color: #666666;
+}
+
+#todo-list {
+    padding: 0;
+    list-style: none;
+}
+
+#todo-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid #cccccc;
+}
+
+#todo-list label {
+    margin-top: 0;
+    font-weight: normal;
+}
+
+#todo-list input {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+#todo-list .completed span {
+    color: #666666;
+    text-decoration: line-through;
+}
+
+button[data-action="delete"] {
+    color: #b00020;
+    background: transparent;
+    border: 1px solid #b00020;
+}
+
+@media (min-width: 600px) {
+    #stats li {
+        width: 23%;
+    }
+}
