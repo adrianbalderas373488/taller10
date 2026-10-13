@@ -27,6 +27,9 @@ const statPercent = document.querySelector('#stat-percent');
 const todoList = document.querySelector('#todo-list');
 const todosMessage = document.querySelector('#todos-message');
 
+const filterSelect = document.querySelector('#filter');
+const searchInput = document.querySelector('#search');
+
 function showLoginError(message) {
     loginError.textContent = message;
     loginError.hidden = false;
@@ -98,6 +101,8 @@ function logout() {
     localStorage.removeItem(TOKEN_KEY);
     currentUser = null;
     todos = [];
+    filterSelect.value = 'all';
+  searchInput.value = '';
     loginForm.reset();
     showLogin();
 }
@@ -197,13 +202,34 @@ function createTodoItem(todo) {
     item.append(label, deleteButton);
     return item;
 }
+function getVisibleTodos() {
+    const status = filterSelect.value;
+    const query = searchInput.value.trim().toLowerCase();
+
+    return todos
+        .filter((todo) => {
+        if (status === 'pending') {
+            return !todo.completed;
+        }
+        if (status === 'completed') {
+            return todo.completed;
+        }
+        return true;
+        })
+        .filter((todo) => todo.todo.toLowerCase().includes(query))
+        .sort((a, b) => Number(a.completed) - Number(b.completed) || a.id - b.id);
+}
+
 
 function renderTodos() {
-    const items = todos.map(createTodoItem);
+    const visibleTodos = getVisibleTodos();
+    const items = visibleTodos.map(createTodoItem);
     todoList.replaceChildren(...items);
 
     if (todos.length === 0) {
         showTodosMessage('No hay tareas para mostrar.');
+    } else if (visibleTodos.length === 0) {
+        showTodosMessage('Ninguna tarea coincide con el filtro o la búsqueda.');
     } else {
         todosMessage.hidden = true;
     }
@@ -250,5 +276,7 @@ async function loadTodos() {
 
 loginForm.addEventListener('submit', handleLoginSubmit);
 logoutButton.addEventListener('click', logout);
+filterSelect.addEventListener('change', renderTodos);
+searchInput.addEventListener('input', renderTodos);
 
 enterPanel();
